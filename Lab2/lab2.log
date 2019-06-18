@@ -1,0 +1,222 @@
+Name: Arabelle Siahaan
+UID: xxxxxxxxx
+
+1. ssh into the linux server 6.
+Type locale to see that it prints out LC_CTYPE=UTF-8. 
+Type the command export LC_ALL='C' 
+Type the locale command again to check that LC_CTYPE is changed to LC_CTYPE="C".
+
+2. Sort the given file and put it into a file named words, using the command: 
+sort /usr/share/dict/words > words
+
+3. Get the html file by doing the command:
+ wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/assign2.html
+
+4. Use the command: tr -c 'A-Za-z' '[\n*]' < assign2.html
+This command replaces all the non-alphabetical characters 
+(i.e. punctuations, spaces, etc.) with new line.
+
+5. Use the command: tr -cs 'A-Za-z' '[\n*]' < assign2.html 
+This command replaces all the non-alphabetical characters with new line, 
+but this time it also 'squeezes' the repeated new lines into a single new line. 
+
+6. Use the command: tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort
+This command does the same thing as 5 
+(replaces non-alphabetical characters with new line and 'squeezes' 
+the repeated new lines into a single new line), 
+then it sorts the words alphabetically.
+
+7. Use the command: 
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u
+This command does the same thing as 6 
+(replaces non-alphabetical characters with new line, 
+squeezes the repeated new line into a single new line and sorts it), 
+but since we're using the -u flag, it deletes duplicated words and 
+only output unique words.
+
+8. Use the command: 
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm - words
+This command does the same thing as 7 (also sorts it uniquely), 
+then it compares the sorted words with the ones in the words file 
+(the sorted /usr/share/dict/words content) 
+
+It contains 3 columns: 
+- the first column contains the words unique to assign2.html 
+- the second column contains the words unique to words 
+- the third column contains the words that is common to both files
+
+9. Use the command: 
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm -23 - words
+This command does the same as 8 but it surpresses columns 2 and 3 
+so we only see the words unique to assign2.html.
+
+10. Get the Hawaiian words from the given webpage using the command: 
+wget http://mauimapp.com/moolelo/hwnwdseng.htm
+
+11. Make the buildowrds shell script file:
+
+- Write #!/bin/bash in the first line
+
+- Want to take the first word between <td> </td> tags using:
+grep '<td>.\{1,\}<\/td>' |
+
+- Delete the English words, which are in the odd numbered lines. 
+Use sed to delete it and ~ to step over every other line:
+sed -n '1~2!p' |
+
+- Remove any leading spaces or tabs
+sed 's/^\s*//g' |
+
+- Replace all capital letters with lower case characters
+tr '[:upper:]' '[:lower:]' |
+
+- Remove all tags in the file
+sed 's/<[^>]*>//g' |
+
+- Change backticks into apostrophes
+sed sed 's/`/'\''/g' |
+
+- Change the commas and spaces into new lines
+sed -r 's/,\s|\s/\n/g' |
+
+- Output only the words with Hawaiian characters:
+grep '^[pk\' mnwlhaeiou]\{1,\}$' |
+
+- Sort the result and remove duplicates
+sort -u
+
+12. Make an executable for the buildwords file using the command chmod +x
+
+13. Create the Hawaiian dictionary by running 
+the buildwords script on the hwnwdseng.htm file.
+Store the result in a file called hwords. Use the command:
+./buildwords < hwnwdseng.htm > hwords
+
+14. Check for mispelled Hawaiian words using the command:
+
+cat assign2.html | 
+tr -cs "pk\'mnwlhaeiou" '[\n*]' | 
+tr '[:upper:]' '[:lower:]' | 
+sort -u | 
+comm -23 - hwords > mis_hawaiian
+
+Then I used the command wc -w mis_hawaiian to count 
+how many mispelled Hawaiian words there are.
+
+Output: 213 mis_hawaiian
+
+15. Check mispelled English words using the command:
+
+cat assign2.html | 
+tr -cs 'A-Za-z' '[\n*]' | 
+tr '[:upper:]' '[:lower:]' | 
+sort -u | 
+comm -23 - words > mis_english
+
+Use the command wc -w mis_english to count 
+the number of mispelled English words.
+
+Output: 42 mis_english
+
+16. Check mispelled English words but not as Hawaiian using the command:
+
+cat mis_english | 
+tr -cs "pk\'mnwlhaeiou" '[\n*]' | 
+sort -u | \
+comm -12 - hwords > mis_eng_not_haw
+
+Use wc -w mis_eng_not_haw to count the number of 
+mispelled English words that are not Hawaiian.
+
+Output: 6 mis_eng_not_haw
+
+Examples:
+e
+halau
+i
+lau
+po
+wiki
+
+
+17. Check mispelled Hawaiian words but not as English using the command:
+
+cat mis_hawaiian | 
+tr -cs 'A-Za-z' '[\n*]' | 
+sort -u | 
+comm -12 - words > mis_haw_not_eng
+
+Use wc -w mis_eng_not_haw to count the number of 
+mispelled English words that are not Hawaiian.
+
+Output: 115 mis_haw_not_eng
+
+Examples:
+a
+ail
+ain
+ake
+al
+ale
+alen
+all
+am
+amp
+ample
+an
+aph
+aul
+awk
+e
+ea
+ee
+el
+em
+emp
+en
+ep
+epa
+h
+ha
+han
+hap
+he
+hei
+hell
+hem
+hen
+hi
+hin
+ho
+home
+how
+ia
+ie
+ii
+ile
+imp
+in
+io
+ion
+iou
+k
+kin
+l
+lan
+le
+lea
+li
+like
+line
+ll
+lo
+look
+lowe
+m
+mail
+main
+me
+men
+mi
+ml
+
