@@ -1,7 +1,7 @@
 # SoftwareConstructionLab
 Software Construction Lab Projects (UCLA - CS35L)
 
-Assignments Titles:
+Assignment Titles:
 1. Getting to know your system
 2. Shell scripting
 3. Modifying and rewriting software
