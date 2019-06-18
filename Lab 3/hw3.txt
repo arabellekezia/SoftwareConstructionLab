@@ -1,0 +1,46 @@
+Name: Arabelle Siahaan
+UID: xxxxxxxxx
+
+Q1. I tested the command on the modified and unmodified version of the
+directories using the time command: time ls -a -A (on each directory)
+I got slightly slower time on the modified version compared to the unmodified
+one, even after running it a few times. I think this is because, in the 
+modified version, we have an additional code to check and ignore "." and ".."
+and this worsens the performance time by a bit.
+
+Q2. This new version of Coreutils should not produce any problems, as long
+as the code follows POSIX.1-2008 standards. We also have to be aware for 
+cases where we expect "." and ".." to be included as well, in which we put
+the -A flag after the -f.
+
+Q3. The script runs into an error when running it with an empty file with
+line numbers more than 0 (because the default numlines is 1).
+Since numlines is more than 0, it will be passed to the chooseline()
+function what passes the file to random.choice(). But since the 
+file is empty, the random.choice() function will output an IndexError
+saying that list index is out of range:
+
+Traceback (most recent call last):
+  File "randline.py", line 70, in <module>
+    main()
+  File "randline.py", line 64, in main
+    sys.stdout.write(generator.chooseline())
+  File "randline.py", line 34, in chooseline
+    return random.choice(self.lines)
+  File "/usr/local/cs/Python-2.7.15/lib/python2.7/random.py", 
+	line 277, in choice
+    return seq[int(self.random() * len(seq))]  
+	# raises IndexError if seq is empty
+IndexError: list index out of range
+
+Q4. When running the script in Python3, it outputs a SyntaxError. 
+This is because Python3 depreceated 'automatic tuple unpacking',
+which unable us to pass (errno, sterror) as an exception.
+
+This is the error message I got when running it with Python2:
+
+  File "randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+
