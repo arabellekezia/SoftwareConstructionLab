@@ -1,0 +1,15 @@
+#!/bin/bash
+
+LC_ALL='en_US.utf8'
+
+for x in "$@"
+do
+        if test -f "$x"
+        then
+                grep -P -l "[\x80-\xFF]" "$x"
+        elif test -d "$x"
+        then
+                grep -r -P -l "[\x80-\xFF]" "$x"
+        fi
+done
+
