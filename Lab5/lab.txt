@@ -1,0 +1,157 @@
+Name: Arabelle Siahaan
+UID: xxxxxxxxx
+
+1. Create tr2b.c file using emacs
+$ emacs tr2b.c
+
+The tr2b.c is the buffered version and I used getchar() and
+putchar() to read input and print output.
+
+2. Create tr2u.c file using emacs
+$ emacs tr2u.c
+
+The tr2u.c is the unbuffered file. I used the read and write
+function to read input and print output.
+
+3. Build the two files using gcc
+$ gcc -o tr2b tr2b.c
+$ gcc -o tr2u tr2u.c
+
+4. First test on a small file. I created a test text file using emacs
+$ emacs test.txt
+
+Then test it using strace so we can record the system calls during
+the execution of our program
+$ strace -o tr2u_output ./tr2u 'abc' 'xyz' < test.txt
+$ strace -o tr2b_output ./tr2b 'abc' 'xyz' < test.txt
+
+With this command, the program is supposed to replace all instances of
+'a' to 'x', 'b' to 'y' and 'c' to 'z'.
+
+5. Now, I want to test it with a big file of 5,000,000 bytes.
+Make the big file using head.
+$ head --bytes=5000000 /dev/urandom > bigfile.txt
+
+Make sure the file is 5,000,000 bytes using ls -l
+ls -l bigfile.txt
+
+Output:
+-rw-r--r-- 1 arabelle ceugrad 5000000 Feb 17 15:25 bigfile.txt
+
+6. Test the program with the big file:
+(a) Test when copying one file to another
+$ strace -c ./tr2b 'abc' 'xyz' < bigfile.txt > tr2b_copy
+
+This outputs:
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 67.19    0.000213           0       611           write
+ 32.81    0.000104           0       613           read
+  0.00    0.000000           0         2           open
+  0.00    0.000000           0         2           close
+  0.00    0.000000           0         4           fstat
+  0.00    0.000000           0         9           mmap
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         1           munmap
+  0.00    0.000000           0         1           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000317                  1250         1 total
+
+$ strace -c ./tr2u 'abc' 'xyz' < bigfile.txt > tr2u_copy
+
+This outputs:
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 55.03   20.270915           4   5000000           write
+ 44.97   16.564592           3   5000002           read
+  0.00    0.000041           6         7           mmap
+  0.00    0.000030           8         4           mprotect
+  0.00    0.000028          14         2           open
+  0.00    0.000011          11         1           munmap
+  0.00    0.000008           8         1         1 access
+  0.00    0.000007           4         2           fstat
+  0.00    0.000007           7         1           execve
+  0.00    0.000006           3         2           close
+  0.00    0.000005           5         1           brk
+  0.00    0.000004           4         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00   36.835654              10000024         1 total
+
+We can see that tr2u.c has a significantly higher amount of system
+calls, since it is calling write and read for every byte. The performance
+of tr2b.c is hence much better than tr2u.c since it only has 1250 system
+calls in total (compared to tr2u.c with ~10,000,000 calls in total).
+
+(b) Test when copying a file to terminal
+$ strace -c ./tr2b 'abc' 'xyz' < bigfile.txt
+
+This outputs:
+n% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 97.83    0.067920           3     20048           write
+  2.17    0.001504           2       613           read
+  0.00    0.000000           0         2           open
+  0.00    0.000000           0         2           close
+  0.00    0.000000           0         4           fstat
+  0.00    0.000000           0         9           mmap
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         1           munmap
+  0.00    0.000000           0         1           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.069424                 20687         1 total
+
+
+$ strace -c ./tr2u 'abc' 'xyz' < bigfile.txt
+
+This outputs:
+n% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 55.29   21.477208           4   5000000           write
+ 44.71   17.370891           3   5000002           read
+  0.00    0.000000           0         2           open
+  0.00    0.000000           0         2           close
+  0.00    0.000000           0         2           fstat
+  0.00    0.000000           0         7           mmap
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         1           munmap
+  0.00    0.000000           0         1           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00   38.848099              10000024         1 total
+
+
+We can see here, that the number of system calls for tr2u.c is
+significantly more than the number of system calls for tr2b.c.
+This is because it calls the read and write functions for each of
+the 5,000,000 bytes in the big file.
+
+7. Now, we compare the time needed to run on a same file using the
+time command. For this, I'm going to use the small test.txt file
+I made earlier.
+
+$ time ./tr2b 'abc' 'xyz' < test.txt > timeb_out.txt
+
+This outputs:
+real	0m0.005s
+user	0m0.000s
+sys	0m0.002s
+
+$ time ./tr2u 'abc' 'xyz' < test.txt > timeu_out.txt
+
+This outputs:
+real	0m0.016s
+user	0m0.001s
+sys	0m0.013s
+
+We can see that the time taken for the tr2u.c to run on the same file
+is more than three times the time taken by tr2b.c. We can also see that
+most of the time consumed is by sys on doing system calls. Hence, we can
+see that tr2b.c has a better performance than tr2u.c.
