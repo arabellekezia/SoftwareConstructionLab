@@ -1,0 +1,101 @@
+Name: Arabelle Siahaan
+UID: xxxxxxxxx
+
+I. Exercise 1.1
+
+1. Open Emacs using the command emacs exer1.html
+2. C-s H T M L RET
+3. C-s s c a v e n g e r RET
+4. C-s s e l f - r e f e r e n t i a l RET
+5. C-s a r r o w RET
+6. C-e
+7. C-a
+8. Using the C-s search command to look for words and C-e and C-a to go to the back/ front of a line.
+9. Didn't use arrow
+10. C-x C-c
+
+II. Exercise 1.2
+
+1. Open Emacs using the command emacs exer2.html
+2. C-s < ! - - C-a C-k
+3. C-s D E L C-a C-k
+4. C-s < ! - - C-a C-k C-k C-k C-k C-k
+5. C-s < ! - C-b C-b C-u 7 C-d
+C-s < p M-h UP DEL
+C-s < ! C-a C-k
+ 
+
+III. Exercise 1.3
+
+1. Open Emacs using the command emacs exer3.html
+2. C-s A s s i M-f M-f DEL 4 2
+C-s A s M-f M-f DEL 4 2
+3. C-s U T F - 8 M-% U S - A S C I I RET y
+4. M-< C-M-s [ ^ [ : a s c i i : ] ] C-a C-k C-k C-k	
+5. C-s < / o C-e RET
+6. C-x C-c
+
+
+IV. Exercise 1.4
+
+1. Execute the shell command cat exer2.html exer2.diff >exer4.html
+2. Open Emacs using the command emacs exer4.html
+3. M-> C-r < ! - C-a C-f C-SPC C-e C-w M-< C-s < / h t m C-e RET C-y
+4. M-> C-r < ! - C-a C-f C-SPC C-n C-n C-n C-e C-w M-< C-s o u t p u t SPC n o t C-e RET C-y
+M-> C-r < ! C-b M-b M-f C-SPC C-e C-b C-b C-b C-b C-b C-b C-w M-< C-s o u t p u t SPC n o t C-e M-b M-b M-f C-y
+M-> C-r < ! C-a C-f C-SPC C-n C-n C-e C-w M-< C-s S u b C-e C-n C-n C-y
+M-> C-r < ! C-a C-f C-SPC C-e C-w M-< C-s H o m e C-e C-n C-n C-y
+M-> C-r < ! C-a C-f C-SPC C-n C-n C-e C-w M-< C-s L a b C-e C-n C-n C-y
+5. M-< C-s e n d SPC o f SPC H T M C-e C-n C-SPC M-> DEL
+6. C-x u
+7. M-> - - > C-r e x e r 1 C-a < ! - - - RET
+8. M-< C-s < o l > M-% < o L > y y y y y y y
+It is said that there are 7 occurences of <ol> being replaced to <oL>
+9. C-x C-c
+Ran command diff -u exer1.html exer4.html >exer4.diff and compared the results
+
+V. Exercise 1.5
+
+1. Open Emacs using the command emacs
+M-x m a k e - d i r e c t o r y RET
+2. C-x C-f j u n k / h e l l o . c RET
+(Copy and paste the code)
+3. M-x c o m p i l e RET C-a C-k g c c SPC - o SPC h e l l o . c RET
+4. C-x b h e l l o - o u t RET
+C-u M-! . / h e l l o RET
+5. C-SP M-> M-w C-x C-f k e y 1 . t x t  M-> M-x c l i p b o a r d - y a n k RET
+-*- mode: compilation; default-directory: "~/cs35l_lab1/junk/" -*-
+Compilation started at Sat Jan 12 17:31:05
+
+./hello
+#include <stdio.h>
+int
+main (void)
+{
+  char n = '\n', b = '\\', q = '"';
+  char const *p = "#include <stdio.h>%cint%cmain (void)%c{%c  char n = '%cn', b = '%c%c', q = '%c';%c  char const *p = %c%s%c;%c  printf (p, n, n, n, n, b, b, b, q, n, q, p, q, n, n, n, n);%c  return 0;%c}%c";
+  printf (p, n, n, n, n, b, b, b, q, n, q, p, q, n, n, n, n);
+  return 0;
+}
+
+Compilation finished at Sat Jan 12 17:31:05
+
+
+VI. Exercise 1.6
+
+1. Open Emacs using the emacs command
+C-x b RET
+2. ( r a n d o m  " 6 0 4 - 9 2 8 - 1 0 6 " ) C-j
+The result obtained: 1556656594699848570
+3. ( s e t q SPC x SPC ( r a n d o m ) ) C-j
+(s e t q SPC y SPC ( r a n d o m ) ) C-j
+I got the following random values of x and y:
+x- 157985464379183203
+y- -1891406682529121077
+4. ( * SPC x SPC y ) C-j
+I got the following evaluated value: -1898244460716739967
+I observed that this answer is not mathematically correct, because looking at my x and y values, they have the same number of digits, with x being positive and y being negative. The correct mathematical value should be a negative number with more digits than the current x and y values have. However, when evaluating x*y, we can see that the evaluated value is a negative number with the same number of digits as x and y, hence it is incorrect mathematically.
+5. M - : ( * SPC x SPC y ) C-j
+Still gives the same evaluated value
+6. The two random integers and not truly random in the mathematical sense, because if it is truly random, it has to have an infinite range, which computers are incapable of because of memory capacities. Because of this, Elisp needs to give a finite range for the random value, hence making it not mathematically random. In addition, after generating 5 random values, I've noticed that there's a pattern in which the number generated alternates between negative and positive values. Because there is a pattern, it can be deduced that this is not truly random mathematically.
+7. Consider the number n, which represents the GNU's maximum integer signed long max. If random is truly random, we will have the probability of 1/n to have 0 or 1 as our first number, and the multiplication will not overflow and will evaluate mathematically correct. For 2, we have the probability of 1/2, for 3 the probability is 1/3 and so on. Finally for n there is a probability of 1/n. Combining all this, we have the probability of NOT overflowing as 1/n * (1 + 1/2 + 1/3 + ... + 1/n) which evaluates to 44.7/n. Hence, the probability of overflowing is 1-(44.7/n).
