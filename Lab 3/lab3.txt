@@ -1,0 +1,106 @@
+Name: Arabelle Siahaan
+UID: 604928106
+
+1. In the Linux server, download Coreutils 8.29, its 
+signature and its keyring using these commands:
+wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz
+wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz.sig
+wget https://ftp.gnu.org/gnu/gnu-keyring.gpg
+
+Then I ran the shell command specified:
+gpg --verify --keyring ./gnu-keyring.gpg coreutils-8.29.tar.xz.sig
+
+I got this error:
+gpg: Signature made Wed Dec 27 10:29:05 2017 PST using RSA key ID 306037D9
+gpg: /u/ce/ugrad/arabelle/.gnupg/trustdb.gpg: trustdb created
+gpg: Good signature from "P?draig Brady <P@draigBrady.com>"
+gpg:                 aka "P?draig Brady <pbrady@redhat.com>"
+gpg:                 aka "P?draig Brady <pixelbeat@gnu.org>"
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+
+This error is happening because the key is public and it 
+needs to be verified by the user.
+
+2. Untar the tarball using the command:
+tar -xJvf coreutils-8.29.tar.xz
+cd coreutils-8.29
+
+Then use autoreconf to avoid automake missing errors later:
+autoreconf -f -i
+
+Make my own temporary directory called temp_dir using the mkdir command:
+mkdir temp_dir
+
+Go back to the coreutils-8.29 directory made when we untar the tarball using cd:
+cd coreutils-8.29
+
+Looking at the INSTALL file inside the directory, 
+it is written that we can install
+coreutils using the --prefix flag followed by the directory. 
+I used pwd to find the absolute path directory to my 
+temporary directory and then use this command to install it:
+./configure --prefix=/u/ce/ugrad/arabelle/cs35l_lab3/temp_dir
+
+In the same directory, I run these commands:
+make
+make install
+
+3. To reproduce the bug, go to /temp_dir/bin using the command:
+cd ../temp_dir/bin/
+
+Then, run the command to reproduce the error:
+./ls -a -A
+
+As expected, this command ouputs "." and "..", which is the bug we want to fix.
+
+4. Now, to apply the patch, go back to the coreutils-8.29 directory:
+cd ../../coreutils-8.29/
+
+Create a new file called patch_file using emacs:
+emacs patch_file
+
+Then, I copy and paste the patch provided in Bug#30963 Message#10 to patch_file.
+Apply the patch using the patch command, using the -p1 flag to get rid of the 
+"a/" or "b/" in the pathname provided by the patch:
+patch -p1 < patch_file
+
+5. We want to run the patch using the make command at the 
+top level of the coreutils-8.29 directory:
+make
+
+Since we're running the make commannd the second time, 
+we don't need to run the make install
+command again so that we build the patch only on the fixed 
+version and not the temporary
+directory as well. There were less commands executed 
+during this second make call, because
+it is only compiling the files related to the patched command.
+
+6. Check that the change fixes the bug in coreutils-8.29 
+directory and not in the temp_dir directory.
+
+I. In coreutils-8.29 directory
+Use the commands:
+cd coreutils-8.29/src
+./ls -a -A
+
+The output of the command is: 
+.deps              dirname.o                 
+ .dirstamp          du                 
+'['                 du.c        
+
+We can see that the "." and ".." are not outputted anymore.
+
+II. In temp_dir directory
+Use the commands:
+cd temp_dir/bin
+./ls -a -A
+
+The output of the command is:
+.	    chown    dircolors	 groups    md5sum   
+ ..	    chroot   dirname	 head	   mkdir    
+
+The "." and ".." are still outputted, so we know that 
+this unmodified directory remain unchanged and 
+the bug is still present.    
