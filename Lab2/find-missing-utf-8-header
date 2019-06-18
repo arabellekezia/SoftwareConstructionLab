@@ -1,0 +1,21 @@
+#!/bin/sh
+
+LC_ALL='en_US.utf8'
+
+for x in "$@"
+do
+	if test -f "$x"
+	then
+		first=$( head -n1 "$x" )
+		if [ "$first" != "-*- coding: utf-8 -*-" ]
+		then
+			grep -P -l "[^\x00-\x7F]" "$x"
+		fi
+	elif test -d "$x"
+	then
+		for i in "$x"/*
+		do
+			./find-missing-utf-8-header "$i"
+		done
+	fi
+done
