@@ -1,0 +1,84 @@
+Name: Arabelle Siahaan
+UID: xxxxxxxxx
+
+1. First, make sure that we are in the correct version of sort.
+Check our path first, using the commands:
+$ PATH=/usr/local/cs/bin:$PATH
+$ export PATH
+
+Then we can check the version of sort using the commands:
+$ sort --version
+
+This outputs:
+sort (GNU coreutils) 8.30
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Mike Haertel and Paul Eggert.
+
+This shows that the version is 8.30, which is what we want.
+
+2. Generate a file of 2^24 single-precision floating point. I do this by writing a shell 
+script that generates a value of 2^24 first using the bc command, since we're not allowed
+to use a constant value for it. Then, since each floating point has 4 bytes, a multiply the
+value again with 4 so that it can be used the -N flag in od.
+
+Here is the script I wrote to create the file of floating points:
+
+#!/bin/sh                                                                                                     
+
+num=$(echo "2^24" | bc)
+num=$((num*4))
+
+od -An -t fF -N $num < /dev/urandom | tr -s [:blank:] '\n' | sed '/^$/d' > random.txt
+
+Then to execute it I used these commands on the command line:
+$ chmod +x make_file.sh
+$ ./make_file.sh
+
+Then you can do the ls command to see that the file is made and the less command to
+check that it generated floating points. 
+
+3. Now use the time command to sort our floating points using the command:
+$ time -p sort -g < random.txt > /dev/null
+
+Output:
+real 36.83
+user 190.22
+sys 2.05
+
+4. We want to test it with different number of threads: 1, 2, 4 and 8 threads.
+
+(a) 1 thread
+$ time -p sort -g --parallel=1 random.txt > /dev/null
+Output:
+real 173.94
+user 173.62
+sys 0.30
+
+(b) 2 threads
+$ time -p sort -g --parallel=2 random.txt > /dev/null
+Output:
+real 94.66
+user 179.28
+sys 0.47
+
+(c) 4 threads
+$ time -p sort -g --parallel=4 random.txt > /dev/null
+Output:
+real 55.11
+user 187.31
+sys 0.56
+
+(d) 8 threads
+$ time -p sort -g --parallel=8 random.txt > /dev/null
+Output:
+real 34.51
+user 189.58
+sys 0.70
+
+Some observations I made is that, as the number of threads increase, the
+'real' time decreases. However, the 'user' time increases as the 'user' time
+refers to the amount of time the CPU spends in user time, across all CPUs.
