@@ -1,0 +1,155 @@
+Name: Arabelle Siahaan
+UID: xxxxxxxxx
+
+1. Download the coreutils-with-bug tarball in the linux server and untar it using the commands:
+$ wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/coreutils-with-bug.tar.gz
+$ tar -xzvf coreutils-with-bug.tar.gz
+
+2. Enter the coreutils-with-bug directory made after untarring the tarball,
+and onfigure the script in the directory using the command:
+$ ./configure --prefix=/u/ce/ugrad/arabelle/cs35l_lab4/coreutils-with-bug
+
+3. Install the coreutils-with-bug using the make command:
+$ make
+
+Then, I ran into this error:
+
+In file included from utimecmp.c:41:
+utimens.h:2:5: error: conflicting types for 'futimens'
+ int futimens (int, char const *, struct timespec const [2]);
+     ^~~~~~~~
+In file included from utimecmp.h:25,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+ extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+            ^~~~~~~~
+make[3]: *** [Makefile:659: utimecmp.o] Error 1
+make[3]: Leaving directory '/w/home.18/ce/ugrad/arabelle/cs35l_lab4/coreutils-with-bug/lib'
+make[2]: *** [Makefile:414: all] Error 2
+make[2]: Leaving directory '/w/home.18/ce/ugrad/arabelle/cs35l_lab4/coreutils-with-bug/lib'
+make[1]: *** [Makefile:419: all-recursive] Error 1
+make[1]: Leaving directory '/w/home.18/ce/ugrad/arabelle/cs35l_lab4/coreutils-with-bug'
+make: *** [Makefile:357: all] Error 2
+
+The error here is that there are two functions of the same name, futimens, and this is 
+causing the error. The patch that we were given fixes this by renaming the function.
+
+4. Try to fix the bug by downloading the patch given with the command:
+$ wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/coreutils.diff
+
+Then, apply the patch using the command:
+$ patch -p0 < coreutils.diff
+
+5. Configure the coreutils-with-bug file again to check if the error is still there:
+$ ./configure --prefix=/u/ce/ugrad/arabelle/cs35l_lab4/coreutils-with-bug
+
+Since there are no errors, I compile coreutils-with-bug using the commands:
+$ make 
+$ make install
+
+6. Reproduce the bug using the commands given:
+$ tmp=$(mktemp -d)
+$ cd $tmp
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice
+$ touch now
+$ sleep 1
+$ touch now1
+$ TZ=UTC0 /u/ce/ugrad/arabelle/cs35l_lab4/coreutils-with-bug/bin/ls -lt --full-time wwi-armistice now now1
+-rw-r--r-- 1 arabelle ceugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+-rw-r--r-- 1 arabelle ceugrad 0 2019-02-08 04:00:57.851042941 +0000 now1
+-rw-r--r-- 1 arabelle ceugrad 0 2019-02-08 04:00:51.604872181 +0000 now
+$ cd
+$ rm -fr $tmp
+
+7. Then we want to debug it using gdb:
+$ cd coreutils-with-bug/src/
+$ gdb ls
+
+(gdb) run -lt
+(gdb) info functions
+
+I take alook at the functions in ls, and see the 3 functions that can possibly cause the bug:
+static int compare_atime(V, V);
+static int compare_ctime(V, V);
+static int compare_mtime(V, V);
+
+Then I use s and si on each of the functions to see what might be causing the error:
+
+(gdb) break compare_mtime
+(gdb) run
+(gdb) s 	// or si
+
+I ran into the timespc_cmp many times, which is a function defined in lib/timespec.h as:
+
+/* Return negative, zero, positive if A < B, A == B, A > B, respectively
+Assume the nanosecond components are in range, or close to it.  */
+static inline int
+timespec_cmp (struct timespec a, struct timespec b)
+{
+  int diff = a.tv_sec - b.tv_sec;
+  return diff ? diff : a.tv_nsec - b.tv_nsec;
+}
+
+After analyzing this function, and notice that this might cause overflow that can cause
+the dates to be improperly outputted. When the date difference (diff in the function)
+is too big, it will overflow and as a result, it will make it seem that the file is 
+in the future.
+
+8. Knowing the possible error, I copy the file timespec.h using the command so we can 
+make some adjustments/ changes to the timespec_cmp function using emacs:
+$ cp timespec.h new_timespec.h
+$ emacs new_timespec.h
+
+Instead of finding the difference of a.tv_nsec and b.tv_nsec, we can just use comparison,
+which has the same effect. This is what I changed the function to:
+
+timespec_cmp (struct timespec a, struct timespec b)
+{
+  return a.tv_sec < b.tv_sec ? -1 : a.tv_sec == b.tv_sec ? 0 : 1;
+} 
+ 
+After making the change in the new_timespec.h file, I build a patch in a form of a
+ChangeLog entry using the command:
+$ diff -u timespec.h new_timespec.h > lab4.diff
+
+Add a ChangeLog:
+$ emacs lab4.diff
+C-x 4-a
+
+Then apply the patch lab4.diff we just made:
+$ patch -p0 < lab4.diff
+
+The patch is successfully applied and I run the make command again to make sure
+that it builds:
+$ make
+$ make install
+
+Since it successfully builds, I try to reproduce the ls -t bug again to see 
+if the bug is there. I used the same commands as before, and got the output:
+
+The patch successfully fix the bug as the files are now in order:
+
+-rw-r--r-- 1 arabelle ceugrad 0 2019-02-08 07:42:57.253257258 +0000 now1
+-rw-r--r-- 1 arabelle ceugrad 0 2019-02-08 07:42:50.112058493 +0000 now
+-rw-r--r-- 1 arabelle ceugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+
+9. Now, I want to reproduce the bug in my home directory using these commands:
+$ cd
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice
+$ touch now
+$ sleep 1
+$ touch now1
+$ TZ=UTC0 /u/ce/ugrad/arabelle/cs35l_lab4/coreutils-with-bug/bin/ls -lt --full-time wwi-armistice now now1
+
+The produced output is:
+-rw-r--r-- 1 arabelle ceugrad 0 2054-12-17 17:28:16.000000000 +0000 wwi-armistice
+-rw-r--r-- 1 arabelle ceugrad 0 2019-02-08 07:58:41.079339000 +0000 now1
+-rw-r--r-- 1 arabelle ceugrad 0 2019-02-08 07:58:33.765790000 +0000 now
+
+We can see that the wwi-armistice file is written in 2054.
+This is because all the timestamps use the Unix Epoch as a reference, which was 
+1 January 1970 at 12am. The SEASnet filesystem uses 32-bit timestamps,
+but the local system uses 64-bit timestamps. Therefore, any files made prior to
+the Unix Epoch gets added to the Epoch with 64 bit extensions. Since the wwi-armistice 
+file was made in 1918, the printed timestamp is 2054.
+
