@@ -1,0 +1,24 @@
+#NAME: Arabelle Siahaan
+#UID: xxxxxxxxx
+#!/bin/sh
+
+grep -E '<td>.+</td>' | 
+
+sed -n '1~2!p' |
+
+sed 's/^\s*//g' |
+
+tr '[:upper:]' '[:lower:]' |
+
+sed 's/<[^>]*>//g' |
+
+sed 's/`/'\''/g' |
+
+sed -r 's/,\s|\s/\n/g' |
+
+sed 's/, /\n/g' |
+
+grep "^[pk\' mnwlhaeiou]\{1,\}$" |
+
+sort -u
+
