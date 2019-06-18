@@ -1,0 +1,18 @@
+#!/bin/sh
+
+LC_ALL='C'  
+
+for x in "$@"
+do 
+	if test -f "$x"
+	then
+	#	echo "`grep -P -L "[^\x00-\x7F]" $x`"
+		grep -P -L "[^\x00-\x7F]" "$x"
+	#	grep -l [^[:ascii:]] $x 
+	elif test -d "$x"
+	then
+	#	echo "`grep -r -P -L "[^\x00-\x7F]" $x`"
+		grep -r -P -L "[^\x00-\x7F]" "$x"
+	#	grep -l [^[:ascii:]] $x
+	fi
+done
